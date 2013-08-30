@@ -142,6 +142,7 @@ class UrlPairSetDiff(workers.WorkflowItem):
               )
             )
 
+        yield heartbeat('Processing requests ...')
         yield requests
 
         yield heartbeat('Marking runs as complete')
