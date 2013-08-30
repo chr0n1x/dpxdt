@@ -136,11 +136,12 @@ class UrlPairSetDiff(workers.WorkflowItem):
 
             url_parts = urlparse.urlparse(new_img)
             url       = ( url_parts.path or '/' ).split( '/' )
-            run_name  = ''
-            for depth in range( run_name_depth ):
-              run_name = url.pop() + '/' + urllib.url2pathname( run_name )
+            run_name  = url.pop()
+            for depth in range( run_name_depth-1 ):
+              run_name = url.pop() + '/' + run_name
               if len( url ) <= 0:
                 break
+            run_name = urllib.url2pathname( run_name )
 
             requests.append(
               release_worker.RequestRunWorkflow(
