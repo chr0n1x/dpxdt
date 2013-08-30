@@ -62,6 +62,10 @@ gflags.DEFINE_string(
     'url_prepend_new', None,
     'String to append to URLs in paths returned by the --new_endpoint')
 
+gflags.DEFINE_string(
+    'run_name_depth', None,
+    'URLs for the images may be large. This can shorten them for yous.')
+
 # Local modules
 from dpxdt.client import fetch_worker
 from dpxdt.client import release_worker
@@ -100,7 +104,8 @@ class UrlPairSetDiff(workers.WorkflowItem):
             image_pairs,
             upload_build_id,
             upload_release_name=None,
-            heartbeat=None):
+            heartbeat=None,
+            run_name_depth=2):
 
         if not upload_release_name:
             upload_release_name = str(datetime.datetime.utcnow())
@@ -121,20 +126,28 @@ class UrlPairSetDiff(workers.WorkflowItem):
             config_dict['injectJs'] = FLAGS.inject_js
         config_data = json.dumps(config_dict)
 
-
         yield heartbeat('Requesting captures')
         requests = []
         for old_img, new_img in image_pairs.iteritems():
+
             yield heartbeat( old_img )
             yield heartbeat( new_img )
             yield heartbeat( '--------------------------------' )
+
             url_parts = urlparse.urlparse(new_img)
+            url       = ( url_parts.path or '/' ).split( '/' )
+            run_name  = ''
+            for depth in range( run_name_depth ):
+              run_name = url.pop() + '/' + urllib.url2pathname( run_name )
+              if len( url ) <= 0:
+                break
+
             requests.append(
               release_worker.RequestRunWorkflow(
                 upload_build_id,
                 upload_release_name,
                 release_number,
-                url_parts.path or '/',
+                run_name,
                 new_img,
                 config_data,
                 ref_url=old_img,
@@ -249,7 +262,8 @@ def real_main(upload_build_id=None,
               new_endpoint=None,
               path='',
               prepend_old='',
-              prepend_new=''):
+              prepend_new='',
+              run_name_depth=2):
 
     """Runs pair diffs between URL pairs in the given config file"""
 
@@ -275,7 +289,8 @@ def real_main(upload_build_id=None,
         image_pairs=data['pairs'],
         upload_build_id=upload_build_id,
         upload_release_name=upload_release_name,
-        heartbeat=PrintWorkflow)
+        heartbeat=PrintWorkflow,
+        run_name_depth=run_name_depth)
     item.root = True
 
     coordinator.input_queue.put(item)
@@ -308,7 +323,8 @@ def main(argv):
         new_endpoint=FLAGS.new_endpoint,
         path=str( FLAGS.json_path ),
         prepend_old=str( FLAGS.url_prepend_old ),
-        prepend_new=str( FLAGS.url_prepend_new ))
+        prepend_new=str( FLAGS.url_prepend_new ),
+        run_name_depth=FLAGS.run_name_depth or 2)
 
 
 if __name__ == '__main__':
