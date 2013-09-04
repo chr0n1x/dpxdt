@@ -74,7 +74,6 @@ import flags
 
 # local classes
 from dpxdt.classes.PrintWorkflow import PrintWorkflow
-from dpxdt.classes.InjectConfig  import InjectConfig
 
 class UrlPairSetDiff(workers.WorkflowItem):
     """
