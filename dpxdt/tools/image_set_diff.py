@@ -74,16 +74,7 @@ import flags
 
 # local classes
 from dpxdt.classes.PrintWorkflow import PrintWorkflow
-
-
-class PrintWorkflow(workers.WorkflowItem):
-    """Prints a message to stdout."""
-
-    def run(self, message):
-        yield []  # Make this into a generator
-        print message
-
-
+from dpxdt.classes.InjectConfig  import InjectConfig
 
 class UrlPairSetDiff(workers.WorkflowItem):
     """
